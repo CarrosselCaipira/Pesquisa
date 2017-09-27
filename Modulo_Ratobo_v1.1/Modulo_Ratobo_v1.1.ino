@@ -46,14 +46,15 @@ void setup(){
   pinMode(RED, OUTPUT); //Led Vermelho
   pinMode(GREEN, OUTPUT); //Led Verde
   pinMode(BLUE, OUTPUT); //Led Azul
-  
+
+  //Froçando motores a ficarem parados
   digitalWrite(MOTORE1, LOW);
   digitalWrite(MOTORE2, LOW);
   digitalWrite(MOTORD1, LOW);
   digitalWrite(MOTORD2, LOW);
 
 
-  //Inicia a serial 
+  //Inicia a serial com baud 9600
   MinhaSerial.begin(9600);
   
   
@@ -66,20 +67,11 @@ void setup(){
 //================================================================================================
 
 void loop(){
-  
+  //Após inicializado o programa, chama constantemente a função receberComando()
   receberComando();
 
 }
 
-/*
-#define ENTRADA 1
-#define MOTORE1 4
-#define MOTORE2 7
-#define MOTORD1 8
-#define MOTORD2 12
-#define RED 9
-#define BLUE 10
-#define GREEN 11*/
 //=================================================================================================
 //            FUNÇÕES
 //=================================================================================================
@@ -89,6 +81,7 @@ void receberComando(){
   
   //RECEBENDO BYTE DA COMUNICAÇÃO BLUETOOTH
   char comando[9];
+  //Enquanto houver algo na entrada serial ler e salvar em comando, ja convertido de inteiro para binário em char
   while (serialBT.available()){
     delay(10);
     command = serialBT.read();
@@ -99,7 +92,7 @@ void receberComando(){
 
   
   
-  //Determinando função recebida
+  //Determinando função recebida (os dois primeiros bits determinam a função)
   if(comando[0] == '0' && comando[1] == '0'){
     f00(comando);
   }else
