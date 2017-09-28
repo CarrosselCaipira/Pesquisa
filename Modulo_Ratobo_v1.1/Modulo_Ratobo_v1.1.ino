@@ -8,6 +8,10 @@
 // 12=RX   13=TX
 SoftwareSerial serialBT(12,13);
 
+//Variável que receberá o byte enviado
+char comando[9];
+int command;
+
 
 
 //Definindo nomes para os pinos
@@ -55,7 +59,8 @@ void setup(){
 
 
   //Inicia a serial com baud 9600
-  MinhaSerial.begin(9600);
+  serialBT.begin(9600);
+  Serial.begin(115200);
   
   
 }
@@ -78,34 +83,44 @@ void loop(){
 
 //Chamado toda vez - determina qual função deve ser chamada segundo o byte recebido via bluetooth
 void receberComando(){
-  
   //RECEBENDO BYTE DA COMUNICAÇÃO BLUETOOTH
-  char comando[9];
+    
   //Enquanto houver algo na entrada serial ler e salvar em comando, ja convertido de inteiro para binário em char
-  while (serialBT.available()){
-    delay(10);
-    command = serialBT.read();
-    itoa(command,comando,2);
-    Serial.println(command);
+  if (serialBT.available()){
+      delay(10);
+      command = serialBT.read();
+      itoa(command,comando,2);
+      Serial.println(command);
+      
+     
+     
+    //Consertando perda de bit por começar com 0
+    if(strlen(comando) == 7){
+         int i;
+         for(i=7; i>=1; i--){
+           comando[i] = comando[i-1];
+         } 
+         comando[0] = '0';
+         comando[8] = '\n'; 
+       
+    }
+    
     Serial.println(comando);
-  } 
-
-  
-  
-  //Determinando função recebida (os dois primeiros bits determinam a função)
-  if(comando[0] == '0' && comando[1] == '0'){
-    f00(comando);
-  }else
-    if(comando[0] == '0' && comando[1] == '1'){
-    f01(comando);
-  }else
-    if(comando[0] == '1' && comando[1] == '0'){
-    f10(comando);
-  }else
-    if(comando[0] == '1' && comando[1] == '1'){
-    f11(comando);
+    
+    //Determinando função recebida (os dois primeiros bits determinam a função)
+    if(comando[0] == '0' && comando[1] == '0'){
+      f00(comando);
+    }else
+      if(comando[0] == '0' && comando[1] == '1'){
+      f01(comando);
+    }else
+      if(comando[0] == '1' && comando[1] == '0'){
+      f10(comando);
+    }else
+      if(comando[0] == '1' && comando[1] == '1'){
+      f11(comando);
+    }
   }
-  
     
 }
 
@@ -123,8 +138,8 @@ void f00(char comando[8]){
   dir[1] = comando[6];
   dir[2] = comando[7];
   
-  int velE = ((1*(esq[0]-'0')) + 2*(esq[1]-'0') + 4*(esq[2]-'0')); 
-  int velD = ((1*(dir[0]-'0')) + 2*(dir[1]-'0') + 4*(dir[2]-'0'));
+  int velE = 4*(esq[0]-'0') + 2*(esq[1]-'0') + 1*(esq[2]-'0'); 
+  int velD = 4*(dir[0]-'0') + 2*(dir[1]-'0') + 1*(dir[2]-'0');
 
   //Valores menores que 3 rodam num sentido, enquanto maiores rodam em outro sentido
 
@@ -175,9 +190,13 @@ void f01(char comando[8]){
   azul[0] = comando[6];
   azul[1] = comando[7];
   
-  r = (vermelho[0]-'0' + 2* vermelho[1] - '0') * 85;
-  g = (verde[0]-'0' + 2* verde[1] - '0') * 85;
-  b = (azul[0]-'0' + 2* azul[1] - '0') * 85;
+  r = (2*(vermelho[0]-'0') + 1*(vermelho[1] - '0')) * 85;
+  g = (2*(verde[0]-'0') + 1*(verde[1] - '0')) * 85;
+  b = (2*(azul[0]-'0') + 1*(azul[1] - '0')) * 85;
+  
+  Serial.println(r);
+  Serial.println(g);
+  Serial.println(b);
   
   analogWrite(RED, r);
   analogWrite(GREEN, g);
@@ -198,8 +217,8 @@ void f10(char comando[8]){
   dir[1] = comando[6];
   dir[2] = comando[7];
   
-  int velE = ((1*(esq[0]-'0')) + 2*(esq[1]-'0') + 4*(esq[2]-'0')); 
-  int velD = ((1*(dir[0]-'0')) + 2*(dir[1]-'0') + 4*(dir[2]-'0'));
+  int velE = 4*(esq[0]-'0') + 2*(esq[1]-'0') + 1*(esq[2]-'0'); 
+  int velD = 4*(dir[0]-'0') + 2*(dir[1]-'0') + 1*(dir[2]-'0');
 
   //Valores menores que 3 rodam num sentido, enquanto maiores rodam em outro sentido
 
@@ -207,6 +226,9 @@ void f10(char comando[8]){
   //MOTOR Esquerdo
 
   //PWM pra um polo só
+  
+  Serial.println(velE);
+  Serial.println(velD);
   
   if(velE<3){
     digitalWrite(MOTORE1,HIGH);
